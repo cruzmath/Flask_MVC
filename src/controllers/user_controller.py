@@ -1,6 +1,10 @@
 from flask import render_template, request, redirect, url_for, flash, session
-from models.user import User, db
 from controllers.auth import login_required
+from repositories.user_repository import (
+    get_user_by_email,
+    create_user,
+    get_user_by_id,
+)
 
 
 class UserController:
@@ -13,7 +17,7 @@ class UserController:
             email = request.form.get('email')
             password = request.form.get('password')
 
-            user = User.query.filter_by(email=email).first()
+            user = get_user_by_email(email)
             if user and user.check_password(password):
                 session['user_id'] = user.id
                 flash('Login successful!', 'success')
@@ -30,15 +34,12 @@ class UserController:
             email = request.form.get('email')
             password = request.form.get('password')
 
-            if User.query.filter_by(email=email).first():
+            if get_user_by_email(email):
                 flash('Email already in use!', 'danger')
                 return redirect(url_for('user.register'))
 
-            new_user = User(username=username, email=email)
-            new_user.set_password(password)
-
-            db.session.add(new_user)
-            db.session.commit()
+            # create_user encapsulates hashing, add and commit
+            create_user(username=username, email=email, password=password)
 
             flash('Registration successful!', 'success')
             return redirect(url_for('user.login'))
@@ -55,6 +56,6 @@ class UserController:
     def home():
         user = None
         if session.get('user_id'):
-            user = User.query.get(session.get('user_id'))
+            user = get_user_by_id(session.get('user_id'))
         username = user.username if user else None
         return render_template('home.html', username=username)
