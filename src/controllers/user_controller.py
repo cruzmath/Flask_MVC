@@ -6,7 +6,6 @@ from controllers.auth import login_required
 class UserController:
     @staticmethod
     def login():
-        # if already logged in, redirect to home
         if session.get('user_id'):
             return redirect(url_for('user.home'))
 
@@ -14,9 +13,8 @@ class UserController:
             email = request.form.get('email')
             password = request.form.get('password')
 
-            user = User.query.filter_by(email=email, password=password).first()
-            if user:
-                # set session user id to mark as authenticated
+            user = User.query.filter_by(email=email).first()
+            if user and user.check_password(password):
                 session['user_id'] = user.id
                 flash('Login successful!', 'success')
                 return redirect(url_for('user.home'))
@@ -32,11 +30,12 @@ class UserController:
             email = request.form.get('email')
             password = request.form.get('password')
 
-            new_user = User(username=username, email=email, password=password)
-
             if User.query.filter_by(email=email).first():
                 flash('Email already in use!', 'danger')
                 return redirect(url_for('user.register'))
+
+            new_user = User(username=username, email=email)
+            new_user.set_password(password)
 
             db.session.add(new_user)
             db.session.commit()
@@ -47,7 +46,6 @@ class UserController:
 
     @staticmethod
     def logout():
-        # clear the session to log out
         session.pop('user_id', None)
         flash('You have been logged out.', 'info')
         return redirect(url_for('user.login'))
@@ -55,7 +53,6 @@ class UserController:
     @staticmethod
     @login_required
     def home():
-        # show user-specific info on home
         user = None
         if session.get('user_id'):
             user = User.query.get(session.get('user_id'))

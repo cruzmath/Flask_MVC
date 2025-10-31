@@ -6,7 +6,6 @@ from models.user import db
     
 app = Flask(__name__, template_folder='views')
 app.config.from_object(Config)
-# ensure Flask session uses the secret key from config
 app.secret_key = app.config.get('SECRET_KEY')
 app.register_blueprint(user_blueprint)
 
