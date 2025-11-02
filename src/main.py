@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from config import Config
 from routes.user_bp import user_blueprint
 from models.user import db
